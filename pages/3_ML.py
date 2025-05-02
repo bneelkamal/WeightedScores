@@ -4,26 +4,25 @@ import pandas as pd
 import utils # Your shared utility functions
 
 # --- Page Configuration and Title ---
-# Consider setting page_config only once in your main app file if needed globally
-# st.set_page_config(page_title="ML - Weighted Score Calculator", layout="centered")
 st.title("Machine Learning - Weighted Score Calculator")
 
-# --- Evaluation Breakdown Display ---
+# --- Evaluation Breakdown Display (Modified) ---
 st.subheader("Evaluation Breakdown - Machine Learning")
-# Display the final components and their weights
+# Display the final components and their weights, showing assignments separately
 eval_data = {
     "Component": [
-        "Assignments (Combined)",
+        "Assignment 1",         # Changed
+        "Assignment 2",         # Changed
         "Quizzes (Combined)",
         "Major Examination",
         "Total"
     ],
-    "Weightage": ["25%", "25%", "50%", "100%"]
+    "Weightage": ["12.5%", "12.5%", "25%", "50%", "100%"] # Changed weights
 }
 st.table(pd.DataFrame(eval_data))
 
 # --- Maximum Marks Information ---
-# Display the fixed maximum marks for each individual input component
+# Display the fixed maximum marks for each individual input component (remains the same)
 st.write("### Maximum Marks for Each Input Component")
 st.write("- Assignment 1: 50")
 st.write("- Assignment 2: 100")
@@ -33,8 +32,8 @@ st.write("- Quiz 3: 20")
 st.write("- Major Examination: 100")
 
 # --- Score Input Fields ---
+# (Remain the same)
 st.subheader("Enter Your Scores")
-# Use unique keys for each input widget
 a1_score = st.number_input("Assignment 1 Score", min_value=0.0, max_value=50.0, value=0.0, step=0.1, key="ml_a1")
 a2_score = st.number_input("Assignment 2 Score", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="ml_a2")
 
@@ -44,14 +43,15 @@ q3_score = st.number_input("Quiz 3 Score", min_value=0.0, max_value=20.0, value=
 
 major_score = st.number_input("Major Examination Score", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="ml_major")
 
-# --- Calculation Function ---
+# --- Calculation Function (Modified) ---
 def calculate_ml_score_and_table(a1_score, a2_score, q1_score, q2_score, q3_score, major_score):
     """
     Calculates the weighted score for Machine Learning based on fixed max marks
-    and specified weights, combining assignments and quizzes.
+    and specified weights, treating assignments individually.
     """
-    # Define weights
-    weight_assignments = 0.25 # 25%
+    # Define weights (modified for individual assignments)
+    weight_a1 = 0.125         # 12.5%
+    weight_a2 = 0.125         # 12.5%
     weight_quizzes = 0.25     # 25%
     weight_major = 0.50       # 50%
 
@@ -63,34 +63,40 @@ def calculate_ml_score_and_table(a1_score, a2_score, q1_score, q2_score, q3_scor
     max_q3 = 20.0
     max_major = 100.0
 
-    # Calculate combined scores and max marks
-    combined_assignment_score = a1_score + a2_score
-    combined_assignment_max = max_a1 + max_a2 # 150
+    # --- Assignment Calculations (Individual) ---
+    a1_perc = (a1_score / max_a1) * 100 if max_a1 > 0 else 0
+    a2_perc = (a2_score / max_a2) * 100 if max_a2 > 0 else 0
+    weighted_a1 = a1_perc * weight_a1
+    weighted_a2 = a2_perc * weight_a2
 
+    # --- Quiz Calculation (Combined) ---
     combined_quiz_score = q1_score + q2_score + q3_score
     combined_quiz_max = max_q1 + max_q2 + max_q3 # 60
-
-    # Calculate percentage for each combined component
-    assignment_perc = (combined_assignment_score / combined_assignment_max) * 100 if combined_assignment_max > 0 else 0
     quiz_perc = (combined_quiz_score / combined_quiz_max) * 100 if combined_quiz_max > 0 else 0
-    major_perc = (major_score / max_major) * 100 if max_major > 0 else 0
-
-    # Calculate weighted contributions
-    weighted_assignments = assignment_perc * weight_assignments
     weighted_quizzes = quiz_perc * weight_quizzes
+
+    # --- Major Exam Calculation ---
+    major_perc = (major_score / max_major) * 100 if max_major > 0 else 0
     weighted_major = major_perc * weight_major
 
-    # Calculate final total score
-    total_weighted_score = weighted_assignments + weighted_quizzes + weighted_major
+    # Calculate final total score by summing individual weighted contributions
+    total_weighted_score = weighted_a1 + weighted_a2 + weighted_quizzes + weighted_major
 
-    # Prepare data for the summary table
+    # Prepare data for the summary table (modified for individual assignments)
     summary_data = [
         {
-            "Component": "Assignments (Combined)",
-            "Score": f"{combined_assignment_score:.2f}/{combined_assignment_max:.0f}",
-            "Percentage": f"{assignment_perc:.2f}%",
-            "Weight": f"{int(weight_assignments*100)}%",
-            "Weighted Contribution": f"{weighted_assignments:.2f}"
+            "Component": "Assignment 1", # Changed
+            "Score": f"{a1_score:.2f}/{max_a1:.0f}", # Changed
+            "Percentage": f"{a1_perc:.2f}%", # Changed
+            "Weight": f"{weight_a1*100:.1f}%", # Changed (using .1f for 12.5%)
+            "Weighted Contribution": f"{weighted_a1:.2f}" # Changed
+        },
+        {
+            "Component": "Assignment 2", # Changed
+            "Score": f"{a2_score:.2f}/{max_a2:.0f}", # Changed
+            "Percentage": f"{a2_perc:.2f}%", # Changed
+            "Weight": f"{weight_a2*100:.1f}%", # Changed
+            "Weighted Contribution": f"{weighted_a2:.2f}" # Changed
         },
         {
             "Component": "Quizzes (Combined)",
@@ -110,21 +116,19 @@ def calculate_ml_score_and_table(a1_score, a2_score, q1_score, q2_score, q3_scor
     return total_weighted_score, pd.DataFrame(summary_data)
 
 # --- Calculation Button and Results Display ---
+# (Remains the same)
 if st.button("Calculate Weighted Score - Machine Learning"):
-    # Call the calculation function with the user inputs
     total_score, summary_df = calculate_ml_score_and_table(
         a1_score, a2_score,
         q1_score, q2_score, q3_score,
         major_score
     )
 
-    # Display the results
     st.success(f"Your weighted total score for Machine Learning is: {total_score:.2f}")
     st.subheader("Summary Table")
-    st.table(summary_df) # Display the detailed breakdown
-    st.markdown(f"**Final Weighted Score:** {total_score:.2f}") # Repeat final score
+    st.table(summary_df)
+    st.markdown(f"**Final Weighted Score:** {total_score:.2f}")
 
-    # Display messages using the utils module
-    message = utils.get_encouraging_message(total_score) # Score-based message
+    message = utils.get_encouraging_message(total_score)
     st.info(message)
-    st.markdown(f"### Quote of the Day:\n> {utils.get_random_motivational_quote()}") # Random quote
+    st.markdown(f"### Quote of the Day:\n> {utils.get_random_motivational_quote()}")
